@@ -3,15 +3,17 @@ namespace EsiniBulOyunu
 	public partial class Form1 : Form
 	{
 		Random rnd = new Random();
-		int boyut = 6;  //satýr ve sütun sayýsý
+		int boyut = 4;  //satýr ve sütun sayýsý
 		List<string> resimler = new List<string>();
 		List<string> kartlar = new List<string>();
+		List<PictureBox> aciklar = new List<PictureBox>();
+		int yokEdilenAdet = 0;
+
 		public Form1()
 		{
 			ResimleriYukle();
 			InitializeComponent();
-			KartlariSec();
-			KartlariDiz();
+
 
 		}
 
@@ -32,12 +34,76 @@ namespace EsiniBulOyunu
 					resimKutusu.Size = new Size(gen, yuk);
 					resimKutusu.Left = x * (resimKutusu.Width + bosluk);
 					resimKutusu.Top = y * (resimKutusu.Height + bosluk);
-					resimKutusu.ImageLocation = @"img\" + kartlar[i];
+					resimKutusu.ImageLocation = "back.jpg";
 					resimKutusu.SizeMode = PictureBoxSizeMode.Zoom;
+					resimKutusu.Click += ResimKutusu_Click;
 					pnlKartlar.Controls.Add(resimKutusu);
 					i++;
 				}
 			}
+		}
+		//sender: Týklanan Resim kutusubu taþýr.
+		private void ResimKutusu_Click(object? sender, EventArgs e)
+		{
+			PictureBox tiklanan = (PictureBox)sender;
+			//eðer ayný karta ikinci kez týklandýysa birþey yapmadan çýk.
+			if (aciklar.Count == 1 && aciklar[0] == tiklanan)
+				return;
+			//yeni bir resim kutusuna
+			if (aciklar.Count == 2)
+			{
+				AciklariKapat();
+			}
+
+			aciklar.Add(tiklanan);
+			int kartIndeks = (int)tiklanan.Tag;
+			string resim = kartlar[kartIndeks];
+			tiklanan.ImageLocation = @"img\" + resim;
+			//2. kartý açtýðýnda yapýlacak eþleþme kontrolü
+			if (aciklar.Count == 2 && aciklar[0].ImageLocation == aciklar[1].ImageLocation)
+			{
+
+				Application.DoEvents();
+				AciklariGecikmeliYoket();
+				AciklariKapat();
+			}
+			//Oyun bitti mi?
+			if (yokEdilenAdet == kartlar.Count)
+			{
+				MessageBox.Show("Oyun Bitti!!");
+				OyunuSifirla();
+			}
+
+		}
+
+		private void OyunuSifirla()
+		{
+			pnlKartlar.Controls.Clear();
+			yokEdilenAdet = 0;
+			kartlar.Clear();
+			aciklar.Clear();
+			gboYeniOyun.Show();
+			pnlKartlar.BackColor = Color.Transparent;
+		}
+
+		private void AciklariGecikmeliYoket()
+		{
+			Thread.Sleep(500);
+			foreach (PictureBox kutu in aciklar)
+			{
+				pnlKartlar.Controls.Remove(kutu);
+				yokEdilenAdet++;
+			}
+
+		}
+
+		private void AciklariKapat()
+		{
+			foreach (PictureBox kutu in aciklar)
+			{
+				kutu.ImageLocation = "back.jpg";
+			}
+			aciklar.Clear();
 		}
 
 		private void KartlariSec()
@@ -77,6 +143,35 @@ namespace EsiniBulOyunu
 			{
 				resimler.Add(dosya.Name);
 			}
+		}
+
+		private void btnOyunuBaslat_Click(object sender, EventArgs e)
+		{
+			OyunuBaslat();
+		}
+
+		private void OyunuBaslat()
+		{
+			pnlKartlar.BackColor = Color.WhiteSmoke;
+			SeviyeyeKararVer();
+			gboYeniOyun.Hide();
+			KartlariSec();
+			KartlariDiz();
+		}
+
+		private void SeviyeyeKararVer()
+		{
+			if (rb1.Checked) boyut = 2;
+			if (rb1.Checked) boyut = 2;
+			else if (rb2.Checked) boyut = 4;
+			else if (rb3.Checked) boyut = 6;
+			else if (rb3.Checked) boyut = 8;
+			else boyut = 10;
+		}
+
+		private void yeniOyunToolStripMenuItem1_Click(object sender, EventArgs e)
+		{
+			OyunuSifirla();
 		}
 	}
 }
